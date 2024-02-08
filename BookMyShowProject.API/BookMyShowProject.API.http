@@ -1,0 +1,6 @@
+@BookMyShowProject.API_HostAddress = http://localhost:5281
+
+GET {{BookMyShowProject.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
