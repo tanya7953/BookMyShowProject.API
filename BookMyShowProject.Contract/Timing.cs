@@ -9,7 +9,7 @@ namespace BookMyShowProject.Contract
 {
     public class Timing
     {
-        [Key]
+        
         public int Id { get; set; }   
         public string MovieName { get; set;}
         public string showTiming { get; set;}

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace BookMyShowProject.Contract
 {
-    public class Movie
+    public class Movies
     {
-        [Key]
+        
         public int ID { get; set; }
         public string MovieName { get; set; }
         public string DirectorName { get; set;}
@@ -17,6 +17,6 @@ namespace BookMyShowProject.Contract
         public bool status {  get; set; }
         public string genre { get; set; }
         public int duration { get; set; }
-        //public  ICollection<Timing> showTiming { get; set; }
+        
     }
 }

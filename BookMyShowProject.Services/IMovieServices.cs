@@ -9,7 +9,14 @@ namespace BookMyShowProject.Services
 {
     public interface IMovieServices
     {
-        List<Movie> GetMovies();
-        string AddMovie(Movie request);
+       
+
+        List<Movies> GetMovies();
+        string AddMovie(Movies request);
+        string AddMovieSchedule(Timing request);
+        string UpdateStatus(string MovieName);
+        string deleteMovie(int id);
+
+        
     }
 }

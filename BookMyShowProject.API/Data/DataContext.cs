@@ -10,7 +10,7 @@ namespace BookMyShowProject.API.Data
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
         }
-        public DbSet<Movie> Movies { get; set; }
+        public DbSet<Movies> movies { get; set; }
         public DbSet<Timing> Timings { get; set; }
 
     }
