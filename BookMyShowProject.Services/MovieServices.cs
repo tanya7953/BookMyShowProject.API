@@ -18,24 +18,29 @@ namespace BookMyShowProject.Services
     public class MovieServices : IMovieServices
     {
         private readonly IConfiguration _configuration;
+
+        public string UsersPreferedTiming { get; private set; }
+        public int SeatsNeeded { get; private set; }
+
         public MovieServices(IConfiguration configuration)
         {
 
-            _configuration = configuration; 
+            _configuration = configuration;
 
         }
-        public List<Movies> GetMovies() { 
-            List<Movies> moviesList= new List<Movies>();
+        public List<Movies> GetMovies()
+        {
+            List<Movies> moviesList = new List<Movies>();
             using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
             {
-                SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Movies WHERE status = 1",con);
+                SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Movies WHERE status = 1", con);
                 DataTable dt = new DataTable();
                 da.Fill(dt);
-                if(dt.Rows.Count > 0)
+                if (dt.Rows.Count > 0)
                 {
                     for (int i = 0; i < dt.Rows.Count; i++)
                     {
-                        Movies movie = new Movies();  
+                        Movies movie = new Movies();
                         movie.ID = (int)dt.Rows[i]["ID"];
                         movie.MovieName = Convert.ToString(dt.Rows[i]["MovieName"]);
                         movie.DirectorName = Convert.ToString(dt.Rows[i]["DirectorName"]);
@@ -73,10 +78,10 @@ namespace BookMyShowProject.Services
                 }
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-               return string.Empty;
-            }   
+                return string.Empty;
+            }
         }
 
         public string AddMovieSchedule(Timing request)
@@ -86,7 +91,7 @@ namespace BookMyShowProject.Services
                 using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
                 {
                     con.Open();
-                    string addMovieSchedule = "INSERT INTO Timings(MovieName,showTiming,availableSeats) VALUES('" + request.MovieName + "' , '" + request.showTiming + "','" + request.availableSeats + "')";                    
+                    string addMovieSchedule = "INSERT INTO Timings(MovieName,showTiming,availableSeats) VALUES('" + request.MovieName + "' , '" + request.showTiming + "','" + request.availableSeats + "')";
                     using (SqlCommand cmd = new SqlCommand(addMovieSchedule, con))
                     {
                         int result = cmd.ExecuteNonQuery();
@@ -102,7 +107,7 @@ namespace BookMyShowProject.Services
                 }
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return ex + "";
             }
@@ -118,25 +123,25 @@ namespace BookMyShowProject.Services
                 {
                     con.Open();
                     string UpdateStatus = "UPDATE Movies SET status = 0 where MovieName = @movieName";
-                    
-                     SqlCommand cmd = new SqlCommand(UpdateStatus, con);
-                    cmd.Parameters.AddWithValue("@movieName", movieName);
-                        int result = cmd.ExecuteNonQuery();
-                        con.Close();
-                        if (result > 0)
-                        {
-                            return "Updated Sucessfully"; ;
-                        }
 
-                    
+                    SqlCommand cmd = new SqlCommand(UpdateStatus, con);
+                    cmd.Parameters.AddWithValue("@movieName", movieName);
+                    int result = cmd.ExecuteNonQuery();
+                    con.Close();
+                    if (result > 0)
+                    {
+                        return "Updated Sucessfully"; ;
+                    }
+
+
                     return "Updated UnSucessfully";
                 }
             }
             catch (Exception ex)
             {
-                return ex+"";
+                return ex + "";
             }
-            
+
         }
 
         public string deleteMovie(int id)
@@ -161,9 +166,12 @@ namespace BookMyShowProject.Services
             {
                 return string.Empty;
             }
-            
+
         }
 
+    
+
+        
         
     }
 }

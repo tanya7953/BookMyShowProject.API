@@ -8,23 +8,23 @@ namespace BookMyShowProject.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-  
-        public class MovieController : ControllerBase
+
+    public class MovieController : ControllerBase
+    {
+        IMovieServices _movieService;
+
+        public MovieController(IMovieServices movieService)
         {
-            IMovieServices _movieService;
+            _movieService = movieService;
+        }
+        
 
-            public MovieController(IMovieServices movieService)
-            {
-                _movieService = movieService;
-            }
-
-            [HttpGet]
-            [Route("GetMovies")]
-            public List<Movies> GetMovies()
-            {
-                return _movieService.GetMovies();
-            }
-
+        [HttpGet]
+        [Route("GetMovies")]
+        public List<Movies> GetMovies()
+        {
+            return _movieService.GetMovies();
+        }
        
         
         [HttpPost]
@@ -43,7 +43,7 @@ namespace BookMyShowProject.API.Controllers
         }
 
 
-       [HttpPut]
+        [HttpPut]
         [Route("UpdateStatus")]
         public string UpdateStatus(string movieName)
         {     
@@ -53,9 +53,12 @@ namespace BookMyShowProject.API.Controllers
         
         [HttpDelete]
         [Route("deleteMovie")]
-        public string deleteMovie(int id) {
+        public string deleteMovie(int id) 
+        {
             return _movieService.deleteMovie(id);
         }
+
+        
 
         }
 
