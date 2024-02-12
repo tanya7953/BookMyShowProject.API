@@ -15,8 +15,8 @@ namespace BookMyShowProject.Services
         string AddMovie(Movies request);
         string AddMovieSchedule(Timing request);
         string UpdateStatus(string MovieName);
-        string deleteMovie(int id);
-        //string TicketBooking(string MovieName, string showTiming, int NumberOfSeats);
+        string deleteMovie(string movie);
+       string TicketBooking(string MovieName, string showTiming, int NumberOfSeats);
         
     }
 }

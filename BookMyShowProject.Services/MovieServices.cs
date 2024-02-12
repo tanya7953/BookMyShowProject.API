@@ -144,34 +144,114 @@ namespace BookMyShowProject.Services
 
         }
 
-        public string deleteMovie(int id)
+        public string deleteMovie(string movie)
         {
             try
             {
                 using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
                 {
                     con.Open();
-                    string deleteMovie = "DELETE FROM Movies WHERE ID=" + id;
-                    using (SqlCommand cmd = new SqlCommand(deleteMovie, con))
+                   
+                    SqlCommand cmd = new SqlCommand("DELETE FROM Movies WHERE MovieName= @MovieName", con);
+                    cmd.Parameters.AddWithValue("@MovieName", movie);
+                    int result = cmd.ExecuteNonQuery();
+                    
+                    con.Close();
+                    if(result > 0)
                     {
-                        int result = cmd.ExecuteNonQuery();
-                        con.Close();
-
+                        return "Deleted Sucessfully";
                     }
-                    return "Deleted Sucessfully";
+                    return "This Movie Doesn't Exist";
+                   
                 }
 
             }
             catch (Exception ex)
             {
-                return string.Empty;
+                return ex+"";
             }
 
         }
 
-    
 
-        
-        
+
+        private bool CheckIfMovieExists(string movieName)
+        {
+            using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
+            {
+                SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM Movies WHERE MovieName = @MovieName", con);
+                cmd.Parameters.AddWithValue("@MovieName", movieName);
+
+                con.Open();
+                int count = Convert.ToInt32(cmd.ExecuteScalar());
+                con.Close();
+
+                return count > 0;
+            }
+        }
+
+        public string TicketBooking(string MovieName, string UserPreferedTiming, int NumberOfSeats)
+        {
+            try
+            {
+                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
+                {
+                    if (CheckIfMovieExists(MovieName))
+                    {
+                        string[] validTimes = { "Morning", "Afternoon", "Evening", "Night" };
+                        string inputTime = UserPreferedTiming;
+
+                        if (!validTimes.Contains(inputTime, StringComparer.OrdinalIgnoreCase))
+                        {
+                            return "Invalid Time Added";
+                        }
+
+                        con.Open();
+
+
+                        SqlCommand cmd3 = new SqlCommand("SELECT availableSeats FROM Timings WHERE MovieName = @MovieName", con);
+                        cmd3.Parameters.AddWithValue("@MovieName", MovieName);
+
+                        int seatsLeft = Convert.ToInt32(cmd3.ExecuteScalar());
+                        int seatsLeftAfterBooking = seatsLeft - NumberOfSeats;
+
+                        if (seatsLeftAfterBooking < 0)
+                        {
+                            return "Not enough seats available";
+                        }
+
+                        SqlCommand cmd4 = new SqlCommand("SELECT status FROM Movies WHERE MovieName = @MovieName", con);
+                        cmd4.Parameters.AddWithValue("@MovieName", MovieName);
+                        bool status = Convert.ToBoolean(cmd4.ExecuteScalar());
+
+                        if (!status)
+                        {
+                            return "Movie Currently InActive";
+                        }
+
+                      
+
+                        SqlCommand cmd2 = new SqlCommand("UPDATE Timings SET availableSeats = @SeatsLeftAfterBooking WHERE MovieName = @MovieName and showTiming = @inputTime", con);
+                        cmd2.Parameters.AddWithValue("@SeatsLeftAfterBooking", seatsLeftAfterBooking);
+                        cmd2.Parameters.AddWithValue("@MovieName", MovieName);
+                        cmd2.Parameters.AddWithValue("@inputTime", inputTime);
+                        int rowsAffected_ = cmd2.ExecuteNonQuery();
+
+                        con.Close();
+                        return $"Movie '{MovieName}' Booking successful";
+                    }
+                }
+
+                return "No Movie Found";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+
+
+        }
+
+
+        }
     }
-}

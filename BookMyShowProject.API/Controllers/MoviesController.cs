@@ -53,14 +53,20 @@ namespace BookMyShowProject.API.Controllers
         
         [HttpDelete]
         [Route("deleteMovie")]
-        public string deleteMovie(int id) 
+        public string deleteMovie(string movie) 
         {
-            return _movieService.deleteMovie(id);
+            return _movieService.deleteMovie(movie);
         }
 
-        
+        [HttpPost]
+        [Route("TicketBooking")]
 
+        public string TicketBooking(string MovieName, string UserPreferedTiming, int NumberOfSeats)
+        {
+            return _movieService.TicketBooking(MovieName, UserPreferedTiming, NumberOfSeats);
         }
+
+    }
 
     
 }
