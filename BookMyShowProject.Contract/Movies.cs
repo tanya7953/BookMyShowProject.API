@@ -16,7 +16,7 @@ namespace BookMyShowProject.Contract
         public string TheatreName { get; set; }
         public bool status {  get; set; }
         public string genre { get; set; }
-        public int duration { get; set; }
+        public int duration{ get; set; }
         
     }
 }

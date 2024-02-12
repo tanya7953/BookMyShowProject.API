@@ -62,6 +62,22 @@ namespace BookMyShowProject.Services
                 using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
                 {
                     con.Open();
+                    if (request.MovieName == "")
+                    {
+                        return "Enter Valid Movie Name";
+                    }
+                    if (request.DirectorName == "")
+                    {
+                        return "Enter Valid Director Name";
+                    }
+                    if (request.TheatreName == "")
+                    {
+                        return "Enter Valid Theater Name";
+                    }
+                    if (request.duration == 0)
+                    {
+                        return "Enter Duration Of Movie";
+                    }
                     string addMovie = "INSERT INTO Movies(MovieName,DirectorName,TheatreName,status,genre,duration) VALUES('" + request.MovieName + "' , '" + request.DirectorName + "' , '" + request.TheatreName + "','" + request.status + "' ,'" + request.genre + "','" + request.duration + "')";
                     using (SqlCommand cmd = new SqlCommand(addMovie, con))
                     {
@@ -88,23 +104,35 @@ namespace BookMyShowProject.Services
         {
             try
             {
-                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
+                if (CheckIfMovieExists(request.MovieName))
                 {
-                    con.Open();
-                    string addMovieSchedule = "INSERT INTO Timings(MovieName,showTiming,availableSeats) VALUES('" + request.MovieName + "' , '" + request.showTiming + "','" + request.availableSeats + "')";
-                    using (SqlCommand cmd = new SqlCommand(addMovieSchedule, con))
+                    using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
                     {
-                        int result = cmd.ExecuteNonQuery();
-                        con.Close();
-                        if (result > 0)
+                        con.Open();
+                        
+                        if (request.showTiming == "")
                         {
-                            return JsonConvert.SerializeObject(request);
+                            return "Enter Valid Show Timing Like Evening,Morning ,Night..";
                         }
-                        return string.Empty;
+                        
 
 
+                        string addMovieSchedule = "INSERT INTO Timings(MovieName,showTiming,availableSeats) VALUES('" + request.MovieName + "' , '" + request.showTiming + "','" + request.availableSeats + "')";
+                        using (SqlCommand cmd = new SqlCommand(addMovieSchedule, con))
+                        {
+                            int result = cmd.ExecuteNonQuery();
+                            con.Close();
+                            if (result > 0)
+                            {
+                                return JsonConvert.SerializeObject(request);
+                            }
+                            return string.Empty;
+
+
+                        }
                     }
                 }
+                return "Movie Not Scheduled";
 
             }
             catch (Exception ex)
@@ -119,23 +147,28 @@ namespace BookMyShowProject.Services
         {
             try
             {
-                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
+                if (CheckIfMovieExists(movieName))
                 {
-                    con.Open();
-                    string UpdateStatus = "UPDATE Movies SET status = 0 where MovieName = @movieName";
 
-                    SqlCommand cmd = new SqlCommand(UpdateStatus, con);
-                    cmd.Parameters.AddWithValue("@movieName", movieName);
-                    int result = cmd.ExecuteNonQuery();
-                    con.Close();
-                    if (result > 0)
+
+                    using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
                     {
-                        return "Updated Sucessfully"; ;
-                    }
+                        con.Open();
+                        string UpdateStatus = "UPDATE Movies SET status = 0 where MovieName = @movieName";
 
-
-                    return "Updated UnSucessfully";
-                }
+                        SqlCommand cmd = new SqlCommand(UpdateStatus, con);
+                        cmd.Parameters.AddWithValue("@movieName", movieName);
+                        int result = cmd.ExecuteNonQuery();
+                        con.Close();
+                        if (result > 0)
+                        {
+                            return "Updated Sucessfully"; ;
+                        }
+                        return "Updated UnSucessfully";
+                    } }
+                    return "Movie Don't Exist";
+                   
+                
             }
             catch (Exception ex)
             {
