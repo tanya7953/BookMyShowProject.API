@@ -11,9 +11,9 @@ namespace BookMyShowProject.Contract
     {
         
         public int Id { get; set; }   
-        public string MovieName { get; set;}
-        public string showTiming { get; set;}
-        public int availableSeats {  get; set; }
+        public string? MovieName { get; set;}
+        public string? showTiming { get; set;}
+        public int? availableSeats {  get; set; }
 
     }
 }

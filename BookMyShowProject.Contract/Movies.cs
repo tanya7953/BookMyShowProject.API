@@ -11,12 +11,12 @@ namespace BookMyShowProject.Contract
     {
         
         public int ID { get; set; }
-        public string MovieName { get; set; }
-        public string DirectorName { get; set;}
-        public string TheatreName { get; set; }
-        public bool status {  get; set; }
-        public string genre { get; set; }
-        public int duration{ get; set; }
+        public string? MovieName { get; set; }
+        public string? DirectorName { get; set;}
+        public string? TheatreName { get; set; }
+        public bool? status {  get; set; }
+        public string? genre { get; set; }
+        public int? duration{ get; set; }
         
     }
 }

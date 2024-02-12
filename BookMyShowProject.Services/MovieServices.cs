@@ -19,9 +19,7 @@ namespace BookMyShowProject.Services
     {
         private readonly IConfiguration _configuration;
 
-        public string UsersPreferedTiming { get; private set; }
-        public int SeatsNeeded { get; private set; }
-
+        
         public MovieServices(IConfiguration configuration)
         {
 
@@ -30,29 +28,32 @@ namespace BookMyShowProject.Services
         }
         public List<Movies> GetMovies()
         {
-            List<Movies> moviesList = new List<Movies>();
-            using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
-            {
-                SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Movies WHERE status = 1", con);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-                if (dt.Rows.Count > 0)
+            
+                List<Movies> moviesList = new List<Movies>();
+                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
                 {
-                    for (int i = 0; i < dt.Rows.Count; i++)
+                    SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Movies WHERE status = 1", con);
+                    DataTable dt = new DataTable();
+                    da.Fill(dt);
+                    if (dt.Rows.Count > 0)
                     {
-                        Movies movie = new Movies();
-                        movie.ID = (int)dt.Rows[i]["ID"];
-                        movie.MovieName = Convert.ToString(dt.Rows[i]["MovieName"]);
-                        movie.DirectorName = Convert.ToString(dt.Rows[i]["DirectorName"]);
-                        movie.TheatreName = Convert.ToString(dt.Rows[i]["TheatreName"]);
-                        movie.status = (bool)dt.Rows[i]["status"];
-                        movie.genre = Convert.ToString(dt.Rows[i]["genre"]);
-                        movie.duration = (int)dt.Rows[i]["duration"];
-                        moviesList.Add(movie);
+                        for (int i = 0; i < dt.Rows.Count; i++)
+                        {
+                            Movies movie = new Movies();
+                            movie.ID = (int)dt.Rows[i]["ID"];
+                            movie.MovieName = Convert.ToString(dt.Rows[i]["MovieName"]);
+                            movie.DirectorName = Convert.ToString(dt.Rows[i]["DirectorName"]);
+                            movie.TheatreName = Convert.ToString(dt.Rows[i]["TheatreName"]);
+                            movie.status = (bool)dt.Rows[i]["status"];
+                            movie.genre = Convert.ToString(dt.Rows[i]["genre"]);
+                            movie.duration = (int)dt.Rows[i]["duration"];
+                            moviesList.Add(movie);
+                        }
                     }
                 }
-            }
-            return moviesList;
+                return moviesList;
+            
+           
         }
 
         public string AddMovie(Movies request)
@@ -96,7 +97,7 @@ namespace BookMyShowProject.Services
             }
             catch (Exception ex)
             {
-                return string.Empty;
+                return ex+"";
             }
         }
 
@@ -208,12 +209,12 @@ namespace BookMyShowProject.Services
 
 
 
-        private bool CheckIfMovieExists(string movieName)
+        private bool CheckIfMovieExists(string MovieName)
         {
             using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
             {
                 SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM Movies WHERE MovieName = @MovieName", con);
-                cmd.Parameters.AddWithValue("@MovieName", movieName);
+                cmd.Parameters.AddWithValue("@MovieName", MovieName);
 
                 con.Open();
                 int count = Convert.ToInt32(cmd.ExecuteScalar());
@@ -223,7 +224,7 @@ namespace BookMyShowProject.Services
             }
         }
 
-        public string TicketBooking(string MovieName, string UserPreferedTiming, int NumberOfSeats)
+        public string TicketBooking(string MovieName, string PreferedShowTiming, int NumberOfSeats)
         {
             try
             {
@@ -231,45 +232,33 @@ namespace BookMyShowProject.Services
                 {
                     if (CheckIfMovieExists(MovieName))
                     {
-                        string[] validTimes = { "Morning", "Afternoon", "Evening", "Night" };
-                        string inputTime = UserPreferedTiming;
-
+                        string[] validTimes = {"Morning","Afternoon","Evening","Night"};
+                        string inputTime = PreferedShowTiming;
                         if (!validTimes.Contains(inputTime, StringComparer.OrdinalIgnoreCase))
                         {
-                            return "Invalid Time Added";
+                            return "Invalid ShowTime";
                         }
-
                         con.Open();
-
-
                         SqlCommand cmd3 = new SqlCommand("SELECT availableSeats FROM Timings WHERE MovieName = @MovieName", con);
                         cmd3.Parameters.AddWithValue("@MovieName", MovieName);
-
                         int seatsLeft = Convert.ToInt32(cmd3.ExecuteScalar());
                         int seatsLeftAfterBooking = seatsLeft - NumberOfSeats;
-
                         if (seatsLeftAfterBooking < 0)
                         {
-                            return "Not enough seats available";
+                            return "Enough Seats are Not Available for Booking";
                         }
-
                         SqlCommand cmd4 = new SqlCommand("SELECT status FROM Movies WHERE MovieName = @MovieName", con);
                         cmd4.Parameters.AddWithValue("@MovieName", MovieName);
                         bool status = Convert.ToBoolean(cmd4.ExecuteScalar());
-
                         if (!status)
                         {
-                            return "Movie Currently InActive";
+                            return "Movie Currently Not Available";
                         }
-
-                      
-
                         SqlCommand cmd2 = new SqlCommand("UPDATE Timings SET availableSeats = @SeatsLeftAfterBooking WHERE MovieName = @MovieName and showTiming = @inputTime", con);
                         cmd2.Parameters.AddWithValue("@SeatsLeftAfterBooking", seatsLeftAfterBooking);
                         cmd2.Parameters.AddWithValue("@MovieName", MovieName);
                         cmd2.Parameters.AddWithValue("@inputTime", inputTime);
                         int rowsAffected_ = cmd2.ExecuteNonQuery();
-
                         con.Close();
                         return $"Movie '{MovieName}' Booking successful";
                     }
