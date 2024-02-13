@@ -215,15 +215,18 @@ namespace BookMyShowProject.Services
                 if (movieEntity != null)
                 {
                     _dbContext.movies.Remove(movieEntity);
+                    var timingsToDelete = _dbContext.Timings.Where(t => t.MovieName == movie).ToList();
+                    _dbContext.Timings.RemoveRange(timingsToDelete);
                     await _dbContext.SaveChangesAsync();
                     return new APIResponse<string>
                     {
-                        data = "Movie Deleted Successfully",
+                        data = "Movie has been deleted",
                         Status = HttpStatusCode.OK
                     };
                 }
                 return new APIResponse<string>
                 {
+                    
                     Error = new Error { errorMessage = "This Movie Doesn't Exist" },
                     Status = HttpStatusCode.NotFound
                 };
@@ -232,6 +235,7 @@ namespace BookMyShowProject.Services
             {
                 return new APIResponse<string>
                 {
+                    
                     Error = new Error { errorMessage = ex.Message },
                     Status = HttpStatusCode.InternalServerError
                 };

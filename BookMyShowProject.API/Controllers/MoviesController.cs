@@ -77,6 +77,7 @@ namespace BookMyShowProject.API.Controllers
         public async Task<APIResponse<string>> DeleteMovie(string movie)
         {
             return await _movieService.DeleteMovie(movie);
+            
         }
 
         [HttpPost]
@@ -85,9 +86,11 @@ namespace BookMyShowProject.API.Controllers
         {
 
 
-            
-            if (request.showTiming != "Morning" && request.showTiming != "Afternoon" && request.showTiming != "Evening" && request.showTiming != "Night")
-            {
+
+            if (!string.Equals(request.showTiming, "Morning", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(request.showTiming, "Afternoon", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(request.showTiming, "Evening", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(request.showTiming, "Night", StringComparison.OrdinalIgnoreCase)) { 
                 return new APIResponse<string>
                 {
                     Error = new Error { errorMessage = "Enter Valid SHow Timing" },
