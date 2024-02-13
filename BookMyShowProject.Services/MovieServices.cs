@@ -12,268 +12,274 @@ using Azure.Core;
 using System.Text.Json.Nodes;
 using Newtonsoft.Json;
 using Azure;
-
+using BookMyShowProject.API.Data;
+using System.Net;
+using Microsoft.EntityFrameworkCore;
 namespace BookMyShowProject.Services
 {
     public class MovieServices : IMovieServices
     {
-        private readonly IConfiguration _configuration;
+        private readonly DataContext _dbContext;
 
-        
-        public MovieServices(IConfiguration configuration)
+        public MovieServices(DataContext dbContext)
         {
-
-            _configuration = configuration;
-
-        }
-        public List<Movies> GetMovies()
-        {
-            
-                List<Movies> moviesList = new List<Movies>();
-                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
-                {
-                    SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Movies WHERE status = 1", con);
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-                    if (dt.Rows.Count > 0)
-                    {
-                        for (int i = 0; i < dt.Rows.Count; i++)
-                        {
-                            Movies movie = new Movies();
-                            movie.ID = (int)dt.Rows[i]["ID"];
-                            movie.MovieName = Convert.ToString(dt.Rows[i]["MovieName"]);
-                            movie.DirectorName = Convert.ToString(dt.Rows[i]["DirectorName"]);
-                            movie.TheatreName = Convert.ToString(dt.Rows[i]["TheatreName"]);
-                            movie.status = (bool)dt.Rows[i]["status"];
-                            movie.genre = Convert.ToString(dt.Rows[i]["genre"]);
-                            movie.duration = (int)dt.Rows[i]["duration"];
-                            moviesList.Add(movie);
-                        }
-                    }
-                }
-                return moviesList;
-            
-           
+            _dbContext = dbContext;
         }
 
-        public string AddMovie(Movies request)
+        public async Task<APIResponse<List<Movies>>> GetMovies()
         {
             try
             {
-                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
+                var movies = await _dbContext.movies.Where(m => m.status == true).ToListAsync();
+                return new APIResponse<List<Movies>>
                 {
-                    con.Open();
-                    if (request.MovieName == "")
-                    {
-                        return "Enter Valid Movie Name";
-                    }
-                    if (request.DirectorName == "")
-                    {
-                        return "Enter Valid Director Name";
-                    }
-                    if (request.TheatreName == "")
-                    {
-                        return "Enter Valid Theater Name";
-                    }
-                    if (request.duration == 0)
-                    {
-                        return "Enter Duration Of Movie";
-                    }
-                    string addMovie = "INSERT INTO Movies(MovieName,DirectorName,TheatreName,status,genre,duration) VALUES('" + request.MovieName + "' , '" + request.DirectorName + "' , '" + request.TheatreName + "','" + request.status + "' ,'" + request.genre + "','" + request.duration + "')";
-                    using (SqlCommand cmd = new SqlCommand(addMovie, con))
-                    {
-                        int result = cmd.ExecuteNonQuery();
-                        con.Close();
-                        if (result > 0)
-                        {
-                            return JsonConvert.SerializeObject(request);
-                        }
-                        return string.Empty;
-
-
-                    }
-                }
-
+                    data= movies,
+                    Status =HttpStatusCode.OK
+                };
             }
             catch (Exception ex)
             {
-                return ex+"";
+                return new APIResponse<List<Movies>>
+                {
+                    Error= new Error { errorMessage=ex.Message },
+                    Status= HttpStatusCode.InternalServerError
+                };
             }
         }
 
-        public string AddMovieSchedule(Timing request)
+        public async Task<APIResponse<string>> AddMovie(Movies request)
         {
             try
             {
                 if (CheckIfMovieExists(request.MovieName))
                 {
-                    using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
+                    return new APIResponse<string> 
                     {
-                        con.Open();
-                        
-                        if (request.showTiming == "")
-                        {
-                            return "Enter Valid Show Timing Like Evening,Morning ,Night..";
-                        }
-                        
+                        Error = new Error { errorMessage="Movie with the same name Already exist"},
+                        Status= HttpStatusCode.BadRequest
+                    };
 
-
-                        string addMovieSchedule = "INSERT INTO Timings(MovieName,showTiming,availableSeats) VALUES('" + request.MovieName + "' , '" + request.showTiming + "','" + request.availableSeats + "')";
-                        using (SqlCommand cmd = new SqlCommand(addMovieSchedule, con))
-                        {
-                            int result = cmd.ExecuteNonQuery();
-                            con.Close();
-                            if (result > 0)
-                            {
-                                return JsonConvert.SerializeObject(request);
-                            }
-                            return string.Empty;
-
-
-                        }
-                    }
                 }
-                return "Movie Not Scheduled";
+                _dbContext.movies.Add(request);
+                await _dbContext.SaveChangesAsync();
 
+                return new APIResponse<string>
+                {
+                    data="Movie added successfully",
+                    Status=HttpStatusCode.OK
+                };
             }
             catch (Exception ex)
             {
-                return ex + "";
+                return new APIResponse<string>
+                {
+                    Error=new Error { errorMessage = ex.Message },
+                    Status=HttpStatusCode.InternalServerError
+                };
             }
-
-
         }
 
-        public string UpdateStatus(string movieName)
+        public async Task<APIResponse<string>> AddMovieSchedule(Timing request)
         {
             try
             {
-                if (CheckIfMovieExists(movieName))
+                var existingSchedule = await _dbContext.Timings.FirstOrDefaultAsync(t => t.MovieName == request.MovieName && t.showTiming == request.showTiming);
+                if (existingSchedule != null)
                 {
-
-
-                    using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
+                    return new APIResponse<string>
                     {
-                        con.Open();
-                        string UpdateStatus = "UPDATE Movies SET status = 0 where MovieName = @movieName";
+                        Error = new Error { errorMessage = "This schedule already exists for the same movie" },
+                        Status = HttpStatusCode.BadRequest
+                    };
+                }
+                if (CheckIfMovieExists(request.MovieName))
+                {
+            
+                    _dbContext.Timings.Add(request);
+                    await _dbContext.SaveChangesAsync();
 
-                        SqlCommand cmd = new SqlCommand(UpdateStatus, con);
-                        cmd.Parameters.AddWithValue("@movieName", movieName);
-                        int result = cmd.ExecuteNonQuery();
-                        con.Close();
-                        if (result > 0)
-                        {
-                            return "Updated Sucessfully"; ;
-                        }
-                        return "Updated UnSucessfully";
-                    } }
-                    return "Movie Don't Exist";
-                   
-                
+                    return new APIResponse<string>
+                    {
+                        data= "Movie schedule added successfully",
+                        Status= HttpStatusCode.OK
+                    };
+                }
+                return new APIResponse<string>
+                {
+                    Error= new Error { errorMessage = "Movie is not Scheduled" },
+                    Status= HttpStatusCode.NotFound
+                };
             }
             catch (Exception ex)
             {
-                return ex + "";
+                return new APIResponse<string>
+                {
+                    Error= new Error { errorMessage = ex.Message },
+                    Status= HttpStatusCode.InternalServerError
+                };
             }
-
         }
 
-        public string deleteMovie(string movie)
+
+        public async Task<APIResponse<List<Timing>>> GetMoviesSchedule()
         {
             try
             {
-                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
+                var timings = await _dbContext.Timings.ToListAsync();
+                return new APIResponse<List<Timing>>
                 {
-                    con.Open();
-                   
-                    SqlCommand cmd = new SqlCommand("DELETE FROM Movies WHERE MovieName= @MovieName", con);
-                    cmd.Parameters.AddWithValue("@MovieName", movie);
-                    int result = cmd.ExecuteNonQuery();
-                    
-                    con.Close();
-                    if(result > 0)
-                    {
-                        return "Deleted Sucessfully";
-                    }
-                    return "This Movie Doesn't Exist";
-                   
-                }
-
+                    data = timings,
+                    Status = HttpStatusCode.OK
+                };
             }
             catch (Exception ex)
             {
-                return ex+"";
+                return new APIResponse<List<Timing>>
+                {
+                    Error = new Error { errorMessage = ex.Message },
+                    Status = HttpStatusCode.InternalServerError
+                };
             }
-
         }
 
+        public async Task<APIResponse<string>> DeleteMovieSchedule(string MovieName, string showTiming)
+        {
+            try
+            {
+                var timing =await _dbContext.Timings.FirstOrDefaultAsync(t => t.MovieName == MovieName && t.showTiming == showTiming);
+                if (timing != null)
+                {
+                    _dbContext.Timings.Remove(timing);
+                    await _dbContext.SaveChangesAsync();
+                    return new APIResponse<string>
+                    { 
+                        data= $" {MovieName} Scheduled for {showTiming} has been Cancelled",
+                        Status = HttpStatusCode.OK
+                    };
 
+                }
+                return new APIResponse<string>
+                {
+                    Error = new Error { errorMessage = $"{MovieName} is not available to delete OR {showTiming} Show for {MovieName} is not available" },
+                    Status = HttpStatusCode.NotFound
+
+                };
+            }
+            catch (Exception ex)
+            {
+                return new APIResponse<string>
+                {
+                    Error = new Error { errorMessage = ex.Message },
+                    Status = HttpStatusCode.InternalServerError
+                };
+            }
+        }
+
+        public async Task<APIResponse<string>> UpdateStatus(string movieName)
+        {
+            try
+            {
+                var movie =await _dbContext.movies.FirstOrDefaultAsync(m => m.MovieName == movieName);
+                if (movie != null)
+                {
+                    movie.status = false;
+                    await _dbContext.SaveChangesAsync();
+                    return new APIResponse<string>
+                    {
+                        data = $"Status of {movieName} has been Updated Successfully",
+                        Status = HttpStatusCode.OK
+                    };
+                }
+                return new APIResponse<string>
+                {
+                    Error = new Error { errorMessage = $"{movieName} does not exist in database" },
+                    Status = HttpStatusCode.NotFound
+                };
+            }
+            catch (Exception ex)
+            {
+                return new APIResponse<string>
+                {
+                    Error = new Error { errorMessage = ex.Message },
+                    Status = HttpStatusCode.InternalServerError
+                };
+
+            }
+        }
+
+        public async Task<APIResponse<string>> DeleteMovie(string movie)
+        {
+            try
+            {
+                var movieEntity = await _dbContext.movies.FirstOrDefaultAsync(m => m.MovieName == movie);
+                if (movieEntity != null)
+                {
+                    _dbContext.movies.Remove(movieEntity);
+                    await _dbContext.SaveChangesAsync();
+                    return new APIResponse<string>
+                    {
+                        data = "Movie Deleted Successfully",
+                        Status = HttpStatusCode.OK
+                    };
+                }
+                return new APIResponse<string>
+                {
+                    Error = new Error { errorMessage = "This Movie Doesn't Exist" },
+                    Status = HttpStatusCode.NotFound
+                };
+            }
+            catch (Exception ex)
+            {
+                return new APIResponse<string>
+                {
+                    Error = new Error { errorMessage = ex.Message },
+                    Status = HttpStatusCode.InternalServerError
+                };
+            }
+        }
 
         private bool CheckIfMovieExists(string MovieName)
         {
-            using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
-            {
-                SqlCommand cmd = new SqlCommand("SELECT COUNT(*) FROM Movies WHERE MovieName = @MovieName", con);
-                cmd.Parameters.AddWithValue("@MovieName", MovieName);
-
-                con.Open();
-                int count = Convert.ToInt32(cmd.ExecuteScalar());
-                con.Close();
-
-                return count > 0;
-            }
+            return _dbContext.movies.Any(m => m.MovieName == MovieName);
         }
 
-        public string TicketBooking(string MovieName, string PreferedShowTiming, int NumberOfSeats)
+        public async Task<APIResponse<string>> TicketBooking(string MovieName, string PreferedShowTiming, int NumberOfSeats)
         {
             try
             {
-                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DbConnection").ToString()))
+                var timing = await _dbContext.Timings.FirstOrDefaultAsync(t => t.MovieName == MovieName && t.showTiming == PreferedShowTiming);
+                if (timing != null)
                 {
-                    if (CheckIfMovieExists(MovieName))
+                    if (timing.availableSeats >= NumberOfSeats)
                     {
-                        string[] validTimes = {"Morning","Afternoon","Evening","Night"};
-                        string inputTime = PreferedShowTiming;
-                        if (!validTimes.Contains(inputTime, StringComparer.OrdinalIgnoreCase))
+                        timing.availableSeats -= NumberOfSeats;
+                        await _dbContext.SaveChangesAsync();
+                        return new APIResponse<string>
                         {
-                            return "Invalid ShowTime";
-                        }
-                        con.Open();
-                        SqlCommand cmd3 = new SqlCommand("SELECT availableSeats FROM Timings WHERE MovieName = @MovieName", con);
-                        cmd3.Parameters.AddWithValue("@MovieName", MovieName);
-                        int seatsLeft = Convert.ToInt32(cmd3.ExecuteScalar());
-                        int seatsLeftAfterBooking = seatsLeft - NumberOfSeats;
-                        if (seatsLeftAfterBooking < 0)
-                        {
-                            return "Enough Seats are Not Available for Booking";
-                        }
-                        SqlCommand cmd4 = new SqlCommand("SELECT status FROM Movies WHERE MovieName = @MovieName", con);
-                        cmd4.Parameters.AddWithValue("@MovieName", MovieName);
-                        bool status = Convert.ToBoolean(cmd4.ExecuteScalar());
-                        if (!status)
-                        {
-                            return "Movie Currently Not Available";
-                        }
-                        SqlCommand cmd2 = new SqlCommand("UPDATE Timings SET availableSeats = @SeatsLeftAfterBooking WHERE MovieName = @MovieName and showTiming = @inputTime", con);
-                        cmd2.Parameters.AddWithValue("@SeatsLeftAfterBooking", seatsLeftAfterBooking);
-                        cmd2.Parameters.AddWithValue("@MovieName", MovieName);
-                        cmd2.Parameters.AddWithValue("@inputTime", inputTime);
-                        int rowsAffected_ = cmd2.ExecuteNonQuery();
-                        con.Close();
-                        return $"Movie '{MovieName}' Booking successful";
+                            data = $"Movie '{MovieName}' Booking successful",
+                            Status = HttpStatusCode.OK
+                        };
                     }
+                    return new APIResponse<string>
+                    {
+                        Error = new Error { errorMessage = "Enough Seats are Not Available for Booking" },
+                        Status = HttpStatusCode.BadRequest
+                    };
                 }
-
-                return "No Movie Found";
+                return new APIResponse<string>
+                {
+                    Error = new Error { errorMessage = $"NO Show for {MovieName} is available" },
+                    Status = HttpStatusCode.NotFound
+                };
             }
             catch (Exception ex)
             {
-                return ex.Message;
+                return new APIResponse<string>
+                {
+                    Error = new Error { errorMessage = ex.Message },
+                    Status = HttpStatusCode.InternalServerError
+                };
             }
-
-
-        }
-
-
         }
     }
+}

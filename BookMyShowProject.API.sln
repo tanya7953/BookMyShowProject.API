@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookMyShowProject.API", "BookMyShowProject.API\BookMyShowProject.API.csproj", "{3B384B2D-0EF4-4C9D-8E55-B0DE91CF8F7C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BookMyShowProject.API", "BookMyShowProject.API\BookMyShowProject.API.csproj", "{3B384B2D-0EF4-4C9D-8E55-B0DE91CF8F7C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookMyShowProject.Contract", "BookMyShowProject.Contract\BookMyShowProject.Contract.csproj", "{C510722D-C3B1-45AD-B14E-46C1797CE105}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BookMyShowProject.Contract", "BookMyShowProject.Contract\BookMyShowProject.Contract.csproj", "{C510722D-C3B1-45AD-B14E-46C1797CE105}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookMyShowProject.Services", "BookMyShowProject.Services\BookMyShowProject.Services.csproj", "{2581879C-081E-4043-A6BC-68E12E84BFFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BookMyShowProject.Services", "BookMyShowProject.Services\BookMyShowProject.Services.csproj", "{2581879C-081E-4043-A6BC-68E12E84BFFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookMyShowProject.Data", "BookMyShowProject.Data\BookMyShowProject.Data.csproj", "{76809289-1C07-425A-8C3F-E441FDCE6863}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{2581879C-081E-4043-A6BC-68E12E84BFFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2581879C-081E-4043-A6BC-68E12E84BFFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2581879C-081E-4043-A6BC-68E12E84BFFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76809289-1C07-425A-8C3F-E441FDCE6863}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76809289-1C07-425A-8C3F-E441FDCE6863}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76809289-1C07-425A-8C3F-E441FDCE6863}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76809289-1C07-425A-8C3F-E441FDCE6863}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

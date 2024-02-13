@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,14 +10,16 @@ namespace BookMyShowProject.Services
 {
     public interface IMovieServices
     {
-       
 
-        List<Movies> GetMovies();
-        string AddMovie(Movies request);
-        string AddMovieSchedule(Timing request);
-        string UpdateStatus(string MovieName);
-        string deleteMovie(string movie);
-       string TicketBooking(string MovieName, string showTiming, int NumberOfSeats);
+
+        Task<APIResponse<List<Movies>>> GetMovies();
+        Task<APIResponse<string>> AddMovie(Movies request);
+        Task<APIResponse<string>> AddMovieSchedule(Timing request);
+        Task<APIResponse<List<Timing>>> GetMoviesSchedule();
+        Task<APIResponse<string>> DeleteMovieSchedule(string MovieName, string showTiming);
+        Task<APIResponse<string>> UpdateStatus(string movieName);
+        Task<APIResponse<string>> DeleteMovie(string movie);
+        Task<APIResponse<string>> TicketBooking(string MovieName, string showTiming, int NumberOfSeats);
         
     }
 }
